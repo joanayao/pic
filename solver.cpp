@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <functional>
+#include <cmath>
 using namespace std;
 
 struct Point{
@@ -73,52 +74,171 @@ double SimpsonUnequal(vector<double>& r, vector<double>& data, int r0_indice, in
     return integral;
 }
 
-void Solver(double step, vector<double>& h, vector<double>& r, 
-function<double(double,vector<double>)>& F, double uf, vector<vector<double>>& Data){
+int FindZero(vector<double> r){
 
-    // Calculate quantities h_bar, q, g, g_bar
+    int i0;
+    for(int i = 0; i < r.size();i++){
+        if(r[i]<0) continue;
+        else{
+            i0 = i;
+            break;}
+    }
+    return i0;
+}
+
+void Solver(double step, vector<double>& h, vector<double>& r, 
+function<vector<double>(vector<double>,vector<double>,vector<double>,vector<double>,vector<double>)>& hdot_func,
+function<vector<double>(vector<double>)>& rdot_func, 
+double uf){
+
+    // Initialize variables
+
+    int i0;
+    double k1, k2, k3, k4, l1, l2, l3, l4;
+    vector<double> K1, K2, K3, K4, L1, L2, L3, L4;
+    double u_aux = 0;
 
     vector<double> h_bar, q, g, g_bar;
 
-    for(int i = 0; i < r.size(); i++){
-        h_bar.push_back(SimpsonUnequal(r, h, 0, i));
-        q.push_back((h[i]-h_bar[i])*(h[i]-h_bar[i])/r[i]);
-        g.push_back();
-    }
-    
-
-    double K1, K2, K3, K4;
-    double u_aux = ui;
-
-    Data.clear();
-
-    Data.push_back(InitData);
-
-    for (int i = 0; i < InitData.size(); i++){
-        vector<double> iData;
-        Data.push_back(iData);
-    }
-
-    double y;
+    vector<double> r_aux = r;
+    vector<double> h_aux = h;
 
     while(u_aux < uf){
 
-        for (int i = 0; i < Data.size(); i++)
-        {
-            for (int j = 0; j < Data.size(); j++){
-                K1 = h*F(u_aux, Data[i]);
-                K2 = h*F(u_aux+h/2., Data[i]+K1/2.);
-                K3 = h*F(u_aux+h/2., Data[i]+K2/2.);
-                K4 = h*F(u_aux+h, Data[i]+K3);
+        // Find indice for r=0
 
-                y = InitData[i] + (K1 + 2*K2 + 2*K3 + K4);
-                Data[i].push_back(y);
-            }
+        i0 = FindZero(r_aux);
+
+        // Calculate quantities h_bar, q, g, g_bar
+
+        for(int i = 0; i < r_aux.size(); i++){
+            h_bar.push_back(SimpsonUnequal(r_aux, h_aux, i0, i));
+            q.push_back((h_aux[i]-h_bar[i])*(h_aux[i]-h_bar[i])/r_aux[i]);
+        }
+        for(int i = 0; i < r_aux.size(); i++){
+            g.push_back(exp(4*M_PI*r_aux[i]*SimpsonUnequal(r_aux,q,i0,i)));
+        }
+        for(int i = 0; i < r_aux.size(); i++){
+            g_bar.push_back(SimpsonUnequal(r_aux, g, i0, i));
         }
 
-        taux += h;
-    }
+        // first slope
 
+        K1 = hdot_func(r_aux, g, g_bar, h_aux, h_bar);
+        L1 = rdot_func(g_bar);
+
+        // Compute new r and h
+
+        r_aux.clear();
+        h_aux.clear();
+        for(int i = 0; i < K1.size(); i++){
+            r_aux.push_back(r[i] + step*K1[i]/2);
+            h_aux.push_back(h[i] + step*L1[i]/2);
+        }
+
+        // Calculate quantities h_bar, q, g, g_bar with new h and r
+
+        h_bar.clear();
+        q.clear();
+        g.clear();
+        g_bar.clear();
+
+        i0 = FindZero(r_aux);
+        
+        for(int i = 0; i < r_aux.size(); i++){
+            h_bar.push_back(SimpsonUnequal(r_aux, h_aux, i0, i));
+            q.push_back((h[i]-h_bar[i])*(h[i]-h_bar[i])/r_aux[i]);
+        }
+
+        for(int i = 0; i < r_aux.size(); i++){
+            g.push_back(exp(4*M_PI*r_aux[i]*SimpsonUnequal(r_aux,q,i0,i)));
+        }
+        for(int i = 0; i < r_aux.size(); i++){
+            g_bar.push_back(SimpsonUnequal(r_aux, g, i0, i));
+        }
+
+        // second slope
+
+        K2 = hdot_func(r_aux, g, g_bar, h_aux, h_bar);
+        L2 = rdot_func(g_bar);
+
+        // Compute new r and h
+
+        r_aux.clear();
+        h_aux.clear();
+        
+        for(int i = 0; i < K1.size(); i++){
+            r_aux.push_back(r[i] + step*K2[i]/2);
+            h_aux.push_back(h[i] + step*L2[i]/2);
+        }
+
+        // Calculate quantities h_bar, q, g, g_bar with new h and r
+
+        h_bar.clear();
+        q.clear();
+        g.clear();
+        g_bar.clear();
+
+        i0 = FindZero(r_aux);
+        
+        for(int i = 0; i < r_aux.size(); i++){
+            h_bar.push_back(SimpsonUnequal(r_aux, h_aux, i0, i));
+            q.push_back((h[i]-h_bar[i])*(h[i]-h_bar[i])/r_aux[i]);
+        }
+
+        for(int i = 0; i < r_aux.size(); i++){
+            g.push_back(exp(4*M_PI*r_aux[i]*SimpsonUnequal(r_aux,q,i0,i)));
+        }
+        for(int i = 0; i < r_aux.size(); i++){
+            g_bar.push_back(SimpsonUnequal(r_aux, g, i0, i));
+        }
+
+        // third slope
+
+        K3 = hdot_func(r_aux, g, g_bar, h_aux, h_bar);
+        L3 = rdot_func(g_bar);
+
+        // Compute new r and h
+
+        r_aux.clear();
+        h_aux.clear();
+        
+        for(int i = 0; i < K1.size(); i++){
+            r_aux.push_back(r[i] + step*K3[i]);
+            h_aux.push_back(h[i] + step*L3[i]);
+        }
+
+        // Calculate quantities h_bar, q, g, g_bar with new h and r
+
+        h_bar.clear();
+        q.clear();
+        g.clear();
+        g_bar.clear();
+
+        i0 = FindZero(r_aux);
+        
+        for(int i = 0; i < r_aux.size(); i++){
+            h_bar.push_back(SimpsonUnequal(r_aux, h_aux, i0, i));
+            q.push_back((h[i]-h_bar[i])*(h[i]-h_bar[i])/r_aux[i]);
+        }
+
+        for(int i = 0; i < r_aux.size(); i++){
+            g.push_back(exp(4*M_PI*r_aux[i]*SimpsonUnequal(r_aux,q,i0,i)));
+        }
+        for(int i = 0; i < r_aux.size(); i++){
+            g_bar.push_back(SimpsonUnequal(r_aux, g, i0, i));
+        }
+
+        // fourth slope
+
+        K4 = hdot_func(r_aux, g, g_bar, h_aux, h_bar);
+        L4 = rdot_func(g_bar);
+
+        // store points
+
+
+    }
+    
 }
 
 int main(){
@@ -139,20 +259,20 @@ int main(){
 
     cout << SimpsonUnequal(r, data2, r.size()) << endl;*/
 
-    auto h_dot_func = [](vector<double> r, vector<double> g, vector<double> g_bar, vector<double> h, vector<double> h_bar){
-        vector<double> h_dot;
+    auto hdot_func = [](vector<double> r, vector<double> g, vector<double> g_bar, vector<double> h, vector<double> h_bar){
+        vector<double> hdot;
         for(int i = 0; i < r.size(); i++){
-            h_dot.push_back((g[i]-g_bar[i])*(h[i]-h_bar[i])/(2.*r[i]));
+            hdot.push_back((g[i]-g_bar[i])*(h[i]-h_bar[i])/(2.*r[i]));
         }
-        return h_dot;
-    }
+        return hdot;
+    };
 
-    auto r_dot_func = [](vector<double> r, vector<double> g, vector<double> g_bar, vector<double> h, vector<double> h_bar){
-        vector<double> r_dot;
+    auto rdot_func = [](vector<double> g_bar){
+        vector<double> rdot;
         for(int i = 0; i < r.size(); i++){
-            r_dot.push_back(-g_bar[i]/2.);
+            rdot.push_back(-g_bar[i]/2.);
         }
-        return r_dot;
-    }
+        return rdot;
+    };
 }
 
