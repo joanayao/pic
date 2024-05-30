@@ -24,29 +24,29 @@ def ReadOutput(filename):
                     columns[j].append(float(value))
 
             i += 1
+
+        data.append(columns)
                 
     return data
 
 def WriteMunninFile(x,y,data,outfilename):
-    # r -> 0
-    # h -> 1
-    # h_bar -> 2
-    # q -> 3
-    # g -> 4
-    # g_bar -> 5
 
     if x == 'r':
         ix = 0
     elif x == 'h':
         ix = 1
-    elif x == 'h_bar':
+    elif x == 'hbar':
         ix = 2
     elif x == 'q':
         ix = 3
     elif x == 'g':
         ix = 4
-    elif x == 'g_bar':
+    elif x == 'gbar':
         ix = 5
+    elif x == 'v':
+        ix = 6
+    elif y == 'h_fit':
+        ix = 7
     else:
         print("Error: invalid x variable")
         return
@@ -55,14 +55,18 @@ def WriteMunninFile(x,y,data,outfilename):
         iy = 0
     elif y == 'h':
         iy = 1
-    elif y == 'h_bar':
+    elif y == 'hbar':
         iy = 2
     elif y == 'q':
         iy = 3
     elif y == 'g':
         iy = 4
-    elif y == 'g_bar':
+    elif y == 'gbar':
         iy = 5
+    elif y == 'v':
+        iy = 6
+    elif y == 'h_fit':
+        iy = 7
     else:
         print("Error: invalid y variable")
         return
@@ -76,6 +80,5 @@ def WriteMunninFile(x,y,data,outfilename):
         file.write("\n")
 
 
-data = ReadOutput("test.dat")
-WriteMunninFile('r','h_bar',data,"MuninnTest.dat")
-
+data = ReadOutput("Output/Pulse_origin.dat")
+WriteMunninFile('r','h_fit',data,"MuninnPlot/Pulse_origin_hfit_r.dat")

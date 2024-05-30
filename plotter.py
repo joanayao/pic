@@ -25,5 +25,5 @@ y = data[1]
 
 plt.scatter(x,y,color='pink')
 plt.title("Integral with Simpon Rule of gaussian with sigma=1 & h=0.01")
-plt.xlim(-0.2,0.2)
+plt.xlim(-0.5,0.5)
 plt.savefig("gaussian_integral001.png")
