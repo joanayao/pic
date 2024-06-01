@@ -46,54 +46,45 @@ pair<double,double> LinearRegression(vector<double>& r, vector<double>& h){
 vector<double> Parabola_fit(vector<double>& r, vector<double>& h){
     int i0 = FindZero(r);
 
-    /*double a = 1;
-    double b = 1;
-    double c = 1;
-    vector<double> init_params{a,b,c};
-
-    auto CostFunction = [i0,r,h](double a, double b, double c){
-        double parabola = 0;
-        double result = 0;
-        for(int i = i0; i < i0+4 ; i++){
-            parabola = a*r[i]*r[i] + b*r[i] + c;
-            result += (parabola-h[i])*(parabola-h[i]);
-            }
-        return result;
-        };*/
-
     double r4_sum = 0;
     double r3_sum = 0;
     double r2_sum = 0;
-    double r_sum = 0;
+    double r1_sum = 0;
+    double r0_sum = 0;
     double r2_h_sum = 0;
-    double r_h_sum;
-    double h_sum;
+    double r_h_sum = 0;
+    double h_sum = 0;
 
-    for(int i = i0; i < i0+4 ; i++){
+    for(int i = i0; i < i0 + 4; i++){
         r4_sum += r[i]*r[i]*r[i]*r[i];
         r3_sum += r[i]*r[i]*r[i];
         r2_sum += r[i]*r[i];
-        r_sum += r[i];
+        r1_sum += r[i];
+        r0_sum += 1;
         r2_h_sum += r[i]*r[i]*h[i];
         r_h_sum +=r[i]*h[i];
         h_sum += h[i];
     }
 
+    // Solve Ax = b
+
     Matrix3d A;
     A << r4_sum, r3_sum, r2_sum,
-         r3_sum, r2_sum, r_sum,
-         r2_sum, r_sum, 1;
+         r3_sum, r2_sum, r1_sum,
+         r2_sum, r1_sum, r0_sum;
     
     Vector3d B(r2_h_sum,r_h_sum,h_sum);
 
     Vector3d params;
     params = A.inverse()*B;
+
+    // PartialPivLU<Matrix3d> lu(A);
+    // auto params = lu.solve(B);
     
     vector<double> parabola_params = {params[0], params[1], params[2]};
     
     return parabola_params;
 }
-
 void Get_hbar_q_g_gbar(vector<double>& y, vector<double>& h_bar, vector<double>& q, vector<double>& g, vector<double>& g_bar){    
 
     // Get vectors for r and h
@@ -104,6 +95,9 @@ void Get_hbar_q_g_gbar(vector<double>& y, vector<double>& h_bar, vector<double>&
 
     // Get linear fit
     pair<double,double> fit = LinearRegression(r,h);
+
+    // Get parabola fit
+    vector<double> parab_fit = Parabola_fit(r,h);
 
     // Find index for r=0 and insert values for r=0
     int i0 = FindZero(r);
@@ -130,11 +124,19 @@ void Get_hbar_q_g_gbar(vector<double>& y, vector<double>& h_bar, vector<double>&
     }
 
     // Calculate first 3 values for h_bar, q, g, g_bar
+    // for(int i = i0; i < i0+3; i++){
+    //     h_bar.push_back(fit.first + fit.second*r[i]/2.);
+    //     q.push_back(fit.second*fit.second*r[i]/4.);
+    //     g.push_back(1 + M_PI*fit.second*fit.second*r[i]*r[i]/2.);
+    //     g_bar.push_back(1 + M_PI*fit.second*fit.second*r[i]*r[i]/6.);
+    // }
+
+    // Calculate first 3 values for h_bar, q, g, g_bar using parabola fit
     for(int i = i0; i < i0+3; i++){
-        h_bar.push_back(fit.first + fit.second*r[i]/2.);
-        q.push_back(fit.second*fit.second*r[i]/4.);
-        g.push_back(1 + M_PI*fit.second*fit.second*r[i]*r[i]/2.);
-        g_bar.push_back(1 + M_PI*fit.second*fit.second*r[i]*r[i]/4.);
+        h_bar.push_back(parab_fit[2] + parab_fit[1]*r[i]/2. + parab_fit[0]*r[i]*r[i]/3.);
+        q.push_back(parab_fit[1]*parab_fit[1]*r[i]/4. - 2.*parab_fit[1]*parab_fit[0]*r[i]*r[i]/3.);
+        g.push_back(1 + M_PI*parab_fit[1]*parab_fit[1]*r[i]*r[i]/2. - 8*M_PI*parab_fit[1]*parab_fit[0]*r[i]*r[i]*r[i]*r[i]/9.);
+        g_bar.push_back(1 + M_PI*parab_fit[1]*parab_fit[1]*r[i]*r[i]/6. - 8*M_PI*parab_fit[1]*parab_fit[0]*r[i]*r[i]*r[i]*r[i]/45.);
     }
 
     // Calculate quantities h_bar, q, g, g_bar for other r
@@ -184,6 +186,9 @@ void Output(vector<double>& y, vector<double>& h_bar, vector<double>& q, vector<
     pair<double,double> fit = LinearRegression(r_aux,h_aux);
     int i0 = FindZero(r_aux);
 
+    // Get parabola fit
+    vector<double> parab_fit = Parabola_fit(r_aux,h_aux);
+
     Get_hbar_q_g_gbar(y, h_bar, q, g, g_bar);
          
     file << "\"Time = " << u_current << endl;
@@ -197,7 +202,8 @@ void Output(vector<double>& y, vector<double>& h_bar, vector<double>& q, vector<
         << setprecision(16) << 2*y_init[i] << " ";
 
         if(i < i0 + 4 && i > i0-1){
-            file << setprecision(16) << fit.first + fit.second*r_aux[i] << endl;
+            //file << setprecision(16) << fit.first + fit.second*r_aux[i] << endl;
+            file << setprecision(16) << parab_fit[2] + parab_fit[1]*r_aux[i] + parab_fit[0]*r_aux[i]*r_aux[i] << endl;
         }
         else{
             file << setprecision(16) << h_aux[i] << " " << endl;

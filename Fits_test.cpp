@@ -64,7 +64,7 @@ vector<double> Parabola_fit(vector<double>& r, vector<double>& h){
     double r_h_sum = 0;
     double h_sum = 0;
 
-    for(int i = 0; i < r.size() ; i++){
+    for(int i = i0; i < i0+4 ; i++){
         r4_sum += r[i]*r[i]*r[i]*r[i];
         r3_sum += r[i]*r[i]*r[i];
         r2_sum += r[i]*r[i];
@@ -97,15 +97,19 @@ vector<double> Parabola_fit(vector<double>& r, vector<double>& h){
 
 int main(int argc, const char * argv[]){
 
-    vector<double> x, y;
+    vector<double> x = {0,0.1,0.2,0.3};
+    vector<double> y = {0, 2.999500034998501e-08, 1.199200223961605e-07, 2.695952550516121e-07};
 
-    double step = atof(argv[1]);
+
+
+    /*double step = atof(argv[1]);
     for(int i = atoi(argv[2]); i<atoi(argv[3]); i++){
         x.push_back(i*step);
         //y.push_back(0.5+i*step+0.05*sin(i*step*2*M_PI*5/0.4));
-        y.push_back(exp(i*step));
-        //y.push_back(i*i*step*step+1);
-    }
+        y.push_back(exp(-i*step*i*step/5));
+        //y.push_back(i*i*step*step+2*step*i+3);
+    }*/
+
 
     // pair<double,double> fit = LinearRegression(x,y);
 
@@ -120,13 +124,15 @@ int main(int argc, const char * argv[]){
     // file_fit << fit.first << " " <<fit.second<<endl;
 
     vector<double> parabola_fit = Parabola_fit(x,y);
-    ofstream file("Parabola" + string(1,argv[1][2]) + string(1,argv[1][3]) + ".dat");
+    //string filename ="Parabola_exp" + string(1,argv[1][2]) + string(1,argv[1][3]) + ".dat";
+
+    ofstream file("h_parab.dat");
     file << "x " << "y" << endl;
     for(int i = 0; i<x.size(); i++){
         file << x[i] << " " << y[i] << endl;
     }
 
-    ofstream file_fit("Parabola_fit"+ string(1,argv[1][2]) + string(1,argv[1][3]) + ".dat");
+    ofstream file_fit("h_parab_fit.dat");
     file_fit << "a " << "b " << "c" << endl;
-    file_fit << parabola_fit[0] << " " << parabola_fit[1] << " " << parabola_fit[2] <<endl;
+    file_fit << setprecision(16) << parabola_fit[0] << " " << parabola_fit[1] << " " << parabola_fit[2] <<endl;
 }

@@ -65,7 +65,7 @@ def WriteMunninFile(x,y,data,outfilename):
         iy = 5
     elif y == 'v':
         iy = 6
-    elif y == 'h_fit':
+    elif y == 'hfit':
         iy = 7
     else:
         print("Error: invalid y variable")
@@ -80,5 +80,5 @@ def WriteMunninFile(x,y,data,outfilename):
         file.write("\n")
 
 
-data = ReadOutput("Output/Pulse_origin.dat")
-WriteMunninFile('r','h_fit',data,"MuninnPlot/Pulse_origin_hfit_r.dat")
+data = ReadOutput("Output/Pulse_origin_parab.dat")
+WriteMunninFile('r','hbar',data,"MuninnPlot/Pulse_origin_parab_hbar_r.dat")
