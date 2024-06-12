@@ -80,5 +80,5 @@ def WriteMunninFile(x,y,data,outfilename):
         file.write("\n")
 
 
-data = ReadOutput("Output/Pulse_origin_parab.dat")
-WriteMunninFile('r','hbar',data,"MuninnPlot/Pulse_origin_parab_hbar_r.dat")
+data = ReadOutput("Output/GRPulse_origin_h0_Parab_stag_small.dat")
+WriteMunninFile('v','q',data,"MuninnPlot/GRPulse_origin_h0_Parab_stag_small_q_v.dat")

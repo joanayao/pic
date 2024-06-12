@@ -80,3 +80,16 @@ double SimpsonUnequal(vector<double>& r, vector<double>& data, int r0_index, int
 
     return integral;
 }
+
+double TrapezoidalRule(vector<double>& r, vector<double>& data, int i0, int iend){
+    
+    double integral=0;
+    double interval;
+    
+    for(int i = i0; i < iend; i++){
+        interval = abs(r[i+1] - r[i]);
+        integral += interval*(data[i+1]+data[i])/2.;
+    }
+
+    return integral;
+}

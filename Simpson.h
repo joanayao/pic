@@ -11,4 +11,7 @@ using namespace std;
 double SimpsonRule(double h, vector<double>& data);
 double SimpsonUnequal(vector<double>& r, vector<double>& data, int r0_index, int rf);
 
+//Trapezoidal Rule
+double TrapezoidalRule(vector<double>& r, vector<double>& data, int r0_index, int rf);
+
 #endif

@@ -45,14 +45,14 @@ int main(int argc, const char * argv[]){
 
     // Evolution functions
     auto hdot = [](double r, double g, double g_bar, double h, double h_bar){
-        //return (g-g_bar)*(h-h_bar)/(2.*r);
-        return 0;
+        return (g-g_bar)*(h-h_bar)/(2.*r);
+        //return 0;
         //return -cos(r)/2.;
         //return h;
     };
     auto rdot = [](double r, double g, double g_bar, double h, double h_bar){
-        //return -g_bar/2.;
-        return -1./2.;
+        return -g_bar/2.;
+        //return -1./2.;
         //return r;
     };
 

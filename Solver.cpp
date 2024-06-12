@@ -85,6 +85,7 @@ vector<double> Parabola_fit(vector<double>& r, vector<double>& h){
     
     return parabola_params;
 }
+
 void Get_hbar_q_g_gbar(vector<double>& y, vector<double>& h_bar, vector<double>& q, vector<double>& g, vector<double>& g_bar){    
 
     // Get vectors for r and h
@@ -102,13 +103,16 @@ void Get_hbar_q_g_gbar(vector<double>& y, vector<double>& h_bar, vector<double>&
     // Find index for r=0 and insert values for r=0
     int i0 = FindZero(r);
 
-    /*if(r[i0]!=0){
+    if(r[i0]!=0){
         r.insert(r.begin()+i0, 0);
-        h.insert(h.begin()+i0, fit.first);
+        //h.insert(h.begin()+i0, fit.first);
+        h.insert(h.begin()+i0, parab_fit[2]);
     }
     else{
-        h[i0] = fit.first;
-    }*/
+        cout<<"r=0"<<endl;
+        //h[i0] = fit.first;
+        h[i0] = parab_fit[2];
+    }
 
     // Empty vectors
     h_bar.clear();
@@ -123,16 +127,17 @@ void Get_hbar_q_g_gbar(vector<double>& y, vector<double>& h_bar, vector<double>&
         g_bar.push_back(0);
     }
 
-    // Calculate first 3 values for h_bar, q, g, g_bar
+    //Calculate first 3 values for h_bar, q, g, g_bar
     // for(int i = i0; i < i0+3; i++){
-    //     h_bar.push_back(fit.first + fit.second*r[i]/2.);
+    //     //h_bar.push_back(fit.first + fit.second*r[i]/2.);
+    //     h_bar.push_back(h[i] - fit.second*r[i]/2.);
     //     q.push_back(fit.second*fit.second*r[i]/4.);
     //     g.push_back(1 + M_PI*fit.second*fit.second*r[i]*r[i]/2.);
     //     g_bar.push_back(1 + M_PI*fit.second*fit.second*r[i]*r[i]/6.);
     // }
 
-    // Calculate first 3 values for h_bar, q, g, g_bar using parabola fit
-    for(int i = i0; i < i0+3; i++){
+    // // Calculate first 3 values for h_bar, q, g, g_bar using parabola fit
+    for(int i = i0+1; i < i0+4; i++){ //starts at i0+1 because we dont want to use added point at r=0
         h_bar.push_back(parab_fit[2] + parab_fit[1]*r[i]/2. + parab_fit[0]*r[i]*r[i]/3.);
         q.push_back(parab_fit[1]*parab_fit[1]*r[i]/4. - 2.*parab_fit[1]*parab_fit[0]*r[i]*r[i]/3.);
         g.push_back(1 + M_PI*parab_fit[1]*parab_fit[1]*r[i]*r[i]/2. - 8*M_PI*parab_fit[1]*parab_fit[0]*r[i]*r[i]*r[i]*r[i]/9.);
@@ -140,16 +145,33 @@ void Get_hbar_q_g_gbar(vector<double>& y, vector<double>& h_bar, vector<double>&
     }
 
     // Calculate quantities h_bar, q, g, g_bar for other r
-    for(int i = 3; i < r.size()-i0; i++){
-        h_bar.push_back(SimpsonUnequal(r, h, i0, i0+i)/r[i0+i]);
-        q.push_back(0);
-        //q.push_back((h[i]-h_bar[i])*(h[i]-h_bar[i])/r[i0+i]);
+    for(int i = i0+4; i < r.size(); i++){
+        //h_bar.push_back(SimpsonUnequal(r, h, i0, i0+i)/r[i0+i]);
+        h_bar.push_back(TrapezoidalRule(r, h, i0, i)/r[i]);
     }
-    for(int i = 3; i < r.size()-i0; i++){
-        g.push_back(exp(4*M_PI*SimpsonUnequal(r,q,i0,i0+i)));
+    for(int i = i0+4; i < r.size(); i++){
+        //q.push_back(0);
+        q.push_back((h[i]-h_bar[i-1])*(h[i+1]-h_bar[i-1])/r[i]); // We use h_bar[i-1] because hbar does not have point at r=0
     }
-    for(int i = 3; i < r.size()-i0; i++){
-        g_bar.push_back(SimpsonUnequal(r, g, i0, i0+i)/r[i0+i]);
+
+    //Add point in r=0, q=0 to integrate q well
+    vector<double> q_aux = q;
+    q_aux.insert(q_aux.begin(),0);
+
+    for(int i = i0+4; i < r.size(); i++){
+        //g.push_back(exp(4*M_PI*SimpsonUnequal(r,q,i0,i0+i)));
+        g.push_back(exp(4*M_PI*TrapezoidalRule(r,q_aux,i0,i)));
+        //g.push_back(1);
+    }
+
+    //Add point in r=0, g=1 to integrate g well
+    vector<double> g_aux = g;
+    g_aux.insert(g_aux.begin(),1);
+
+    for(int i = i0+4; i < r.size(); i++){
+        //g_bar.push_back(SimpsonUnequal(r, g, i0, i0+i)/r[i0+i]);
+        g_bar.push_back(TrapezoidalRule(r, g_aux, i0, i)/r[i]);
+        //g_bar.push_back(1);
     }
 }
 
@@ -201,7 +223,7 @@ void Output(vector<double>& y, vector<double>& h_bar, vector<double>& q, vector<
         << setprecision(16) << g_bar[i] << " "
         << setprecision(16) << 2*y_init[i] << " ";
 
-        if(i < i0 + 4 && i > i0-1){
+        if(i < i0 + 4 && i > i0-2){
             //file << setprecision(16) << fit.first + fit.second*r_aux[i] << endl;
             file << setprecision(16) << parab_fit[2] + parab_fit[1]*r_aux[i] + parab_fit[0]*r_aux[i]*r_aux[i] << endl;
         }

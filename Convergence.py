@@ -50,7 +50,7 @@ def subtract(x1, y1, x2, y2):
     for pos1, value in enumerate(x1):
         if value in x2:
             pos2 = x2.index(value)
-            dif = abs(y1[pos1] - y2[pos2])
+            dif = y1[pos1] - y2[pos2]
             x.append(value)
             y.append(dif)
 
@@ -85,7 +85,16 @@ files = ["integral1.txt", # index 0
          "integral03odd.txt", # index 6
          "integral03even.txt", # index 7
          "integral01odd.txt", # index 8
-         "integral01even.txt" # index 9
+         "integral01even.txt", # index 9
+         "simpson_i0_l.dat",
+         "simpson_i0_m.dat",
+         "simpson_i0_h.dat",
+         "simpson_offset_i0_l.dat",
+         "simpson_offset_i0_m.dat",
+         "simpson_offset_i0_h.dat",
+         "trap_l.dat",
+         "trap_m.dat",
+         "trap_h.dat",
 ]
 
 xyData = []
@@ -103,11 +112,11 @@ for file in files:
 
 # print(xyData[8][0])
 
-# plt.plot(integral01[0],integral01[1],'o', color = 'hotpink')
+# plt.plot(xyData[18][0],xyData[18][1],'o', color = 'hotpink')
 # plt.xlabel('x')
 # plt.ylabel('Integral')
 # plt.title('Integral of a Gaussian Distribution')
-# plt.savefig("Simp_integral01.png")
+# plt.savefig("Trap_integral01.png")
 
 ################## Plot differences for odd and even separately ##################
 
@@ -118,15 +127,16 @@ for file in files:
 
 # SubOdd2[1] = [e*3*3*3*3 for e in SubOdd2[1]]
 
-# plt.plot(SubOdd1[0],SubOdd1[1], 'o', label = "Difference Low-Mid")
-# plt.plot(SubOdd2[0],SubOdd2[1], linewidth = 0.9, label = r"Difference Mid-High $\times$ $3^4$")
 
-# plt.ylim(-0.1e-6,2.1e-6)
-# plt.legend(loc = "upper right")
+# plt.plot(SubOdd2[0],SubOdd2[1], linewidth = 0.9, label = r"Difference Mid-High $\times$ $3^4$",color = 'xkcd:soft pink')
+# plt.plot(SubOdd1[0],SubOdd1[1], 'o', label = "Difference Low-Mid", color = "hotpink")
+
+# plt.ylim(-2.1e-6,2.1e-6)
+# plt.legend(loc = "upper left")
 # plt.xlabel("x")
-# plt.ylabel("Integral difference")
-# plt.title("Odd Slices")
-# plt.savefig("Simp_subtract_odd1_final.png")
+# plt.ylabel("Relative Errors")
+# #plt.title("Odd Slices")
+# plt.savefig("Simp_subtract_odd1_final_NoAbs.png")
 
 
 # Plot for even number of slices
@@ -136,26 +146,32 @@ for file in files:
 
 # SubEven2[1] = [e*3*3*3*3 for e in SubEven2[1]]
 
-# plt.plot(SubEven1[0],SubEven1[1], 'o',label = "Difference Low-Mid")
-# plt.plot(SubEven2[0],SubEven2[1], linewidth = 0.8,label = r"Difference Mid-High $\times$ $3^4$")
-# plt.ylim(-0.1e-7,2.5e-7)
-# plt.legend(loc = "upper right")
+
+# plt.plot(SubEven2[0],SubEven2[1], linewidth = 0.8,label = r"Difference Mid-High $\times$ $3^4$", color = 'xkcd:soft pink')
+# plt.plot(SubEven1[0],SubEven1[1], 'o',label = "Difference Low-Mid", color = "hotpink")
+# plt.ylim(-2.5e-7,2.5e-7)
+# plt.legend(loc = "upper left")
 # plt.xlabel("x")
-# plt.ylabel("Integral difference")
-# plt.title("Even Slices")
-# plt.savefig("Simp_subtract_even_final.png")
+# plt.ylabel("Relative Errors")
+# #plt.title("Even Slices")
+# plt.savefig("Simp_subtract_even_final_NoAbs.png")
 
 
 ################## Plot differences without separate files ##################
 
-# Sub1 = subtract(xyData[0][0],xyData[0][1],xyData[1][0],xyData[1][1])
-# Sub2 = subtract(xyData[1][0],xyData[1][1],xyData[2][0],xyData[2][1])
+Sub1 = subtract(xyData[16][0],xyData[16][1],xyData[17][0],xyData[17][1])
+Sub2 = subtract(xyData[17][0],xyData[17][1],xyData[18][0],xyData[18][1])
 
-# Sub2[1] = [sub*16 for sub in Sub2[1]]
+Sub2[1] = [sub*4 for sub in Sub2[1]]
+#Sub1[0] = [x-0.5*(Sub1[0][1]-Sub1[0][0]) for x in Sub1[0]]
 
-#plt.plot(Sub1[0][::2],Sub1[1][::2],'o')
-#plt.plot(Sub2[0][::2],Sub2[1][::2], linewidth = 0.8)
-#plt.savefig("Simp_subtract_2.png")
+plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+plt.ylabel("Relative errors")
+plt.xlabel("x")
+plt.plot(Sub2[0],Sub2[1], linewidth = 1, color = 'xkcd:soft pink', label = r"High-Mid $\times$ $2^2$")
+plt.plot(Sub1[0],Sub1[1], 'o', color = 'hotpink', label = "Mid-Low")
+plt.legend(loc = "upper left")
+plt.savefig("Trap_subtract.png")
 
 
 

@@ -61,7 +61,7 @@ def RKsubtract(file1,file2, u_step1, u_step2,v_step1,v_step2):
     #         file.writelines(datalines)
     #         file.write("\n")
 
-    y = [sum(conv_data[i][1])*abs(v_step2-v_step1) for i in range(1, len(conv_data), 2)]
+    y = [math.sqrt(sum(x*x for x in conv_data[i][1])*v_step2) for i in range(1, len(conv_data), 2)]
 
     return [[x,y],conv_data]
 
